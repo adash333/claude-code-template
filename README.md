@@ -8,7 +8,7 @@ Claude Code を使った仕様駆動開発（Spec-Driven Development）のため
 - **6つの永続ドキュメント**: プロダクト要求定義書、機能設計書、アーキテクチャ設計書、リポジトリ構造定義書、開発ガイドライン、用語集
 - **Skill によるガイド**: 各ドキュメントの作成手順とテンプレートを Skill として定義
 - **サブエージェント**: ドキュメントレビューや実装検証を独立したコンテキストで実行
-- **プロンプトログの自動保存**: `Stop` フックで会話ログを `docs/prompt/` 配下に自動記録
+- **プロンプトログの保存**: `Stop` フックで会話ログを `docs/prompt/` 配下に自動記録するほか、`/save-prompt-log` で重要なやり取りをトピック単位で構造化して保存可能
 
 ## ディレクトリ構成
 
@@ -75,36 +75,46 @@ claude
 - `docs/development-guidelines.md` — 開発ガイドライン
 - `docs/glossary.md` — 用語集
 
-### 4. 機能の追加
+### 4. ドキュメントレビュー
 
 ```bash
-> /add-feature ユーザー認証
-```
-
-`.steering/[日付]-[機能名]/` 配下に `requirements.md` / `design.md` / `tasklist.md` を作成し、既存ドキュメントの設計思想に従って実装まで自動実行します。
-
-### 5. ドキュメントレビュー
-
-```bash
-> /review-docs docs/product-requirements.md
+> /review-docs
 ```
 
 `doc-reviewer` サブエージェントが完全性・具体性・一貫性・測定可能性の観点でレビューします。
 
+### 5. ヘッドレスモードで MVP（Minimum Viable Product）を開発
+
+`prompt.md` に実装指示を記述し、Claude Code をヘッドレスモード（`-p`）で実行して一括実装します。
+
+```bash
+cat prompt.md | claude -p --dangerously-skip-permissions \
+    --output-format stream-json \
+    --verbose \
+    --model claude-sonnet-4-6 2>&1 | tee output.jsonl
+```
+
+- `--dangerously-skip-permissions`: 権限プロンプトを全てスキップ（自動実行用）
+- `--output-format stream-json` + `--verbose`: 進捗を JSON ストリームで出力
+- `tee output.jsonl`: 標準出力をファイルにも保存し、後から実行ログを確認可能
+
 ## 提供されるスラッシュコマンド
+
+複数の Skill を順序立てて呼ぶワークフロー、または独自ロジックを持つコマンドのみを Command として定義しています。単機能の Skill は下表（提供される Skill）に集約し、ユーザーは `/<skill-name>` で直接起動できます。
 
 | コマンド | 説明 |
 | -------- | ---- |
-| `/draft-idea` | 対話形式でアイデアメモ (`docs/ideas/initial-requirements.md`) を作成 |
-| `/setup-project` | 6つの永続ドキュメントを対話的に作成 |
-| `/add-feature [機能名]` | 新機能を既存パターンに従って自動実装 |
-| `/review-docs [パス]` | サブエージェントによるドキュメント詳細レビュー |
+| `/setup-project` | 初回セットアップ: 6つの永続ドキュメントを対話的に作成 |
+| `/review-docs` | ドキュメントの詳細レビューをサブエージェントで実行 |
+| `/add-feature [機能名]` | 新機能を既存パターンに従って、完全に無停止で実装 |
 
 ## 提供される Skill
 
+Skill は `/<skill-name>` で直接起動できるほか、Claude が文脈から判断して自動的に呼び出すこともあります。
+
 | Skill | 用途 |
 | ----- | ---- |
-| `draft-idea` | アイデアメモを対話形式で作成 |
+| `draft-idea` | 対話形式でアイデアメモ (`docs/ideas/initial-requirements.md`) を作成 |
 | `prd-writing` | プロダクト要求定義書の作成 |
 | `functional-design` | 機能設計書の作成 |
 | `architecture-design` | アーキテクチャ設計書の作成 |
@@ -112,7 +122,7 @@ claude
 | `development-guidelines` | 開発ガイドラインの作成 |
 | `glossary-creation` | 用語集の作成 |
 | `steering` | 作業計画・タスクリストの記録 |
-| `save-prompt-log` | 会話ログの保存 |
+| `save-prompt-log` | やり取りを `docs/prompt/YYYY-MM-DD-{トピック}.md` に構造化して保存 |
 
 ## サブエージェント
 
