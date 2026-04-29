@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Skill(draft-idea)",
       "Skill(prd-writing)",
       "Skill(functional-design)",
       "Skill(architecture-design)",

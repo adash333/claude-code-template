@@ -38,9 +38,24 @@ git clone https://github.com/<your-account>/claude-code-template.git my-project
 cd my-project
 ```
 
-### 2. アイデアメモの記入
+### 2. アイデアメモの作成
 
-[docs/ideas/initial-requirements.md](docs/ideas/initial-requirements.md) はアイデアメモ用のテンプレートです。`{...}` のプレースホルダーを実際の内容に置き換えてください。記入例は [docs/ideas/initial-requirements.example.md](docs/ideas/initial-requirements.example.md) を参照してください。
+`/draft-idea` を実行すると、Claude が段階的に質問を投げかけ、その回答をもとに [docs/ideas/initial-requirements.md](docs/ideas/initial-requirements.md) を自動生成します。
+
+```bash
+claude
+> /draft-idea
+```
+
+質問は以下の Phase に分かれています（任意フェーズはスキップ可）。
+
+- Phase 1（必須）: プロダクト名・キャッチコピー・概要
+- Phase 2（必須）: 解決したい課題
+- Phase 3（必須）: ターゲットユーザー（ペルソナ）
+- Phase 4（必須）: MVP の機能候補（P0/P1/P2）
+- Phase 5〜7（任意）: 差別化ポイント / 技術スタック / 非機能要件・成功指標
+
+**手動で書きたい場合**: テンプレート [docs/ideas/initial-requirements.md](docs/ideas/initial-requirements.md) の `{...}` プレースホルダーを直接置き換えてください。記入例は [docs/ideas/initial-requirements.example.md](docs/ideas/initial-requirements.example.md) を参照。
 
 ### 3. 永続ドキュメントの作成
 
@@ -80,6 +95,7 @@ claude
 
 | コマンド | 説明 |
 | -------- | ---- |
+| `/draft-idea` | 対話形式でアイデアメモ (`docs/ideas/initial-requirements.md`) を作成 |
 | `/setup-project` | 6つの永続ドキュメントを対話的に作成 |
 | `/add-feature [機能名]` | 新機能を既存パターンに従って自動実装 |
 | `/review-docs [パス]` | サブエージェントによるドキュメント詳細レビュー |
@@ -88,6 +104,7 @@ claude
 
 | Skill | 用途 |
 | ----- | ---- |
+| `draft-idea` | アイデアメモを対話形式で作成 |
 | `prd-writing` | プロダクト要求定義書の作成 |
 | `functional-design` | 機能設計書の作成 |
 | `architecture-design` | アーキテクチャ設計書の作成 |
