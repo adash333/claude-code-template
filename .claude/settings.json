@@ -11,18 +11,5 @@
     ],
     "deny": [],
     "ask": []
-  },
-  "hooks": {
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python .claude/hooks/save_prompt_log.py"
-          }
-        ]
-      }
-    ]
   }
 }
