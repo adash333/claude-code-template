@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Stop フックから呼び出され、直近のユーザープロンプトとアシスタント応答を
-docs/prompt/YYYY-MM-DD.md に追記する。
+docs/prompt/YYYY-MM-DD-{トピック}（自動ログ）.md に追記する。
+
+トピックの解決ルール:
+  - 同日に curated 版 (YYYY-MM-DD-{topic}.md, 末尾が「（自動ログ）」でないもの) が
+    存在すれば、その中で最も新しい mtime を持つファイルの topic を流用する
+  - 存在しなければ「セッション」をフォールバックとして使う
 
 入力: stdin に Claude Code から JSON が渡される。
   { "session_id": "...", "transcript_path": "...", "hook_event_name": "Stop", ... }
@@ -46,11 +51,13 @@ def main() -> int:
     log_dir.mkdir(parents=True, exist_ok=True)
 
     now = datetime.now()
-    log_file = log_dir / f"{now:%Y-%m-%d}.md"
+    date_str = f"{now:%Y-%m-%d}"
+    topic = _resolve_topic(log_dir, date_str)
+    log_file = log_dir / f"{date_str}-{topic}（自動ログ）.md"
 
     parts: list[str] = []
     if not log_file.exists():
-        parts.append(f"# プロンプトログ - {now:%Y-%m-%d}\n")
+        parts.append(f"# プロンプトログ - {date_str} - {topic}（自動ログ）\n")
 
     parts.append(f"\n## {now:%H:%M:%S}\n")
     parts.append("\n### ユーザー\n\n")
@@ -66,6 +73,31 @@ def main() -> int:
         return 0
 
     return 0
+
+
+_AUTO_MARKER = "（自動ログ）"
+
+
+def _resolve_topic(log_dir: Path, date_str: str) -> str:
+    """同日の curated 版 (YYYY-MM-DD-{topic}.md) で末尾が「（自動ログ）」でない
+    ファイルのうち、最も新しい mtime を持つものの topic を返す。
+    候補が無ければ「セッション」を返す。"""
+    if not log_dir.exists():
+        return "セッション"
+    candidates: list[tuple[float, str]] = []
+    prefix = f"{date_str}-"
+    for f in log_dir.glob(f"{prefix}*.md"):
+        topic = f.stem[len(prefix):]
+        if not topic or _AUTO_MARKER in topic:
+            continue
+        try:
+            mtime = f.stat().st_mtime
+        except OSError:
+            continue
+        candidates.append((mtime, topic))
+    if candidates:
+        return max(candidates, key=lambda x: x[0])[1]
+    return "セッション"
 
 
 def _read_jsonl(path: Path) -> list[dict]:
