@@ -33,7 +33,7 @@ Claude Code を使った仕様駆動開発（Spec-Driven Development）のため
 ### 1. テンプレートの取得
 
 ```bash
-git clone https://github.com/<your-account>/claude-code-template.git my-project
+git clone https://github.com/adash333/claude-code-template.git my-project
 cd my-project
 ```
 
